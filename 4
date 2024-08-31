@@ -1,0 +1,61 @@
+use bevy::prelude::*;
+
+#[derive(Component)]
+pub enum Direction {
+    LEFT,RIGHT,TOP,BOTTOM
+}
+
+#[derive(Component)]
+pub struct SnakeHead {
+   direction: Direction 
+}
+
+#[derive(Resource)]
+struct GameTime(Timer);
+
+
+fn setup (mut commands: Commands) {
+    commands.spawn(Camera2dBundle::default());
+
+    commands.spawn((
+        SpriteBundle {
+            sprite: Sprite {
+                color: Color::rgb(0.25, 0.25, 0.75),
+                custom_size: Some(Vec2::new(50.0, 50.0)),
+                ..default()
+            },
+            transform: Transform::from_xyz(0.,0.,0.),
+            ..default()
+        }, 
+        SnakeHead {direction: Direction::RIGHT}
+    ));
+}
+
+fn movement (mut timer: ResMut<GameTime>, time: Res<Time>, mut transform: Query<(&mut Transform), With<SnakeHead>>, direction: Query<&SnakeHead>) {
+    if timer.0.tick(time.delta()).finished() {
+        let mut change_transform = transform.single_mut();
+        let current_direction = direction.single();
+        match current_direction.direction {
+            Direction::TOP=>change_transform.translation.y += 50.,
+            Direction::BOTTOM=>change_transform.translation.y -= 50.,
+            Direction::RIGHT=>change_transform.translation.x += 50.,
+            Direction::LEFT=>change_transform.translation.x -= 50.
+        }
+    }
+}
+
+fn keypressed (mut direction: Query<(&mut SnakeHead)>, input: Res<Input<KeyCode>>) {
+    let mut snake_direction = direction.single_mut();
+    if (input.pressed(KeyCode::W) || input.pressed(KeyCode::Up)) {
+
+    } 
+}
+
+fn main() {
+    App::new()
+        .insert_resource(GameTime(Timer::from_seconds(0.5, TimerMode::Repeating)))
+        .add_plugins(DefaultPlugins)
+        .add_systems(Startup, setup)
+        .add_systems(Update, movement)
+        .run();
+}
